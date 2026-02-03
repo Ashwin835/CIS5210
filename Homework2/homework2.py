@@ -30,25 +30,13 @@ def num_placements_one_per_row(n):
 
 
 def n_queens_valid(board):
-    if len(board) != len(set(board)):
-        return False
-    for i in range(len(board)):
-        col = board[i]
-
-        row, c = i, col
-        while row > 0 and c > 0:
-            if board[row - 1] == c - 1:
+    n = len(board)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if board[i] == board[j]:
                 return False
-            row -= 1
-            c -= 1
-
-        row, c = i, col
-        while row < len(board) - 1:
-            if board[row + 1] == c + 1:
+            if abs(i - j) == abs(board[i] - board[j]):
                 return False
-            row += 1
-            c += 1
-
     return True
 
 
@@ -77,13 +65,13 @@ class LightsOutPuzzle(object):
     def __init__(self, board):
         self.board = board
         self.rows = len(board)
-        self.cols = len(board[0])
+        self.cols = len(board[0]) if board else 0
 
     def get_board(self):
         return self.board
 
     def perform_move(self, row, col):
-        self.board[row][col] = True
+        self.board[row][col] = not self.board[row][col]
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         for d_row, d_col in directions:
             new_row, new_col = row + d_row, col + d_col
@@ -168,7 +156,7 @@ def solve_identical_disks(length, n):
         # try all the disks
         disks = sorted(state)
         for pos in disks:
-            # can we move left?
+            # can we move left
             if pos - 1 >= 0 and pos - 1 not in state:
                 next_state = (state - {pos}) | {pos - 1}
                 if next_state not in visited:
