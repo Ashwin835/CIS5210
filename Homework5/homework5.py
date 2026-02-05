@@ -7,7 +7,7 @@
 ############################################################
 
 # Include your imports here, if any are used.
-import collections
+from collections import deque
 import copy
 import itertools
 import random
@@ -31,7 +31,17 @@ def sudoku_cells():
 
 
 def sudoku_arcs():
-    pass
+    cells= sudoku_cells()
+    arcs= []
+    for cell in cells:
+        for cell2 in cells:
+            row, col = cell
+            row2, col2 = cell2
+            if row == row2 and col ==col2:
+                continue
+            if row == row2 or col == col2 or (row//3 == row2//3 and col//3 == col2//3):
+                arcs.append(((row, col), (row2, col2)))
+    return arcs
 
 
 def read_board(path):
@@ -59,16 +69,37 @@ class Sudoku(object):
         return self.board[cell]
 
     def remove_inconsistent_values(self, cell1, cell2):
-        pass
+        if ((cell1),(cell2)) not in Sudoku.ARCS:
+            return False
+        if len(self.board[cell2]) == 1:
+            number = next(iter(self.board[cell2]))
+            if number in self.board[cell1]:
+                self.board[cell1].remove(number)
+                return True
+        return False
+        
 
     def infer_ac3(self):
-        pass
-
+        queue = deque(Sudoku.ARCS)
+        while queue:
+            cell1, cell2 = queue.popleft()
+            isRemoved = self.remove_inconsistent_values(cell1, cell2)
+            if isRemoved:
+                for arc in Sudoku.ARCS:
+                    if arc[1] == cell1 and arc[0] != cell2:
+                        queue.append(arc)
+            
     def infer_improved(self):
         pass
 
     def infer_with_guessing(self):
         pass
+    
+if __name__ == "__main__":
+    sudoku = Sudoku(read_board("easy.txt")) # See below for a picture.
+    sudoku.infer_ac3()
+    for r in range(9):
+        print(" ".join(str(next(iter(sudoku.get_values((r, c))))) for c in range(9)))
 
 ############################################################
 # Feedback
