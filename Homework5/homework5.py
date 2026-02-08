@@ -9,10 +9,6 @@
 # Include your imports here, if any are used.
 from collections import deque
 import copy
-import itertools
-import random
-import math
-
 ############################################################
 
 student_name = "Ashwin Verma"
@@ -23,30 +19,31 @@ student_name = "Ashwin Verma"
 
 
 def sudoku_cells():
-    cells= []
+    cells = []
     for i in range(9):
         for j in range(9):
-            cells.append((i,j))
+            cells.append((i, j))
     return cells
 
 
 def sudoku_arcs():
-    cells= sudoku_cells()
-    arcs= []
+    cells = sudoku_cells()
+    arcs = []
     for cell in cells:
         for cell2 in cells:
             row, col = cell
             row2, col2 = cell2
-            if row == row2 and col ==col2:
+            if row == row2 and col == col2:
                 continue
-            if row == row2 or col == col2 or (row//3 == row2//3 and col//3 == col2//3):
+            if (row == row2 or col == col2 or
+                    (row//3 == row2//3 and col//3 == col2//3)):
                 arcs.append(((row, col), (row2, col2)))
     return arcs
 
 
 def read_board(path):
     board = {}
-    with open (path, 'r') as f:
+    with open(path, 'r') as f:
         lines = f.readlines()
         for r, line in enumerate(lines):
             for c, char in enumerate(line.strip()):
@@ -69,7 +66,7 @@ class Sudoku(object):
         return self.board[cell]
 
     def remove_inconsistent_values(self, cell1, cell2):
-        if ((cell1),(cell2)) not in Sudoku.ARCS:
+        if ((cell1), (cell2)) not in Sudoku.ARCS:
             return False
         if len(self.board[cell2]) == 1:
             number = next(iter(self.board[cell2]))
@@ -77,7 +74,6 @@ class Sudoku(object):
                 self.board[cell1].remove(number)
                 return True
         return False
-        
 
     def infer_ac3(self):
         queue = deque(Sudoku.ARCS)
@@ -88,7 +84,7 @@ class Sudoku(object):
                 for arc in Sudoku.ARCS:
                     if arc[1] == cell1 and arc[0] != cell2:
                         queue.append(arc)
-            
+
     def infer_improved(self):
         made_additional_inference = True
         while made_additional_inference:
@@ -96,32 +92,54 @@ class Sudoku(object):
             made_additional_inference = False
             for cell in Sudoku.CELLS:
                 if len(self.board[cell]) > 1:
+                    row, col = cell
+                    neighbor_rows = [(r, col) for r in range(9)
+                                     if r != row]
+                    neighbor_cols = [(row, c) for c in range(9)
+                                     if c != col]
+                    neighbor_blocks = [
+                        (r, c) for r in range((row//3)*3, (row//3)*3 + 3)
+                        for c in range((col//3)*3, (col//3)*3 + 3)
+                        if (r, c) != cell]
+                    neighbor_cells = [neighbor_rows, neighbor_cols,
+                                      neighbor_blocks]
                     for number in self.board[cell]:
-                        unique = True
-                        for arcs in Sudoku.ARCS:
-                            if arcs[1] == cell:
-                                cell2 = arcs[0]
-                                if number in self.board[cell2]:
+                        for group in neighbor_cells:
+                            unique = True
+                            for neighbor in group:
+                                if number in self.board[neighbor]:
                                     unique = False
                                     break
-                        if unique: 
-                            made_additional_inference = True
-                            self.board[cell] = {number}
-                            break  
-                    if made_additional_inference: 
+                            if unique:
+                                made_additional_inference = True
+                                self.board[cell] = {number}
+                                break
+                    if made_additional_inference:
                         break
-                        
-                                
-                                
+
+    def isSolved(self):
+        for cell in Sudoku.CELLS:
+            if len(self.board[cell]) != 1:
+                return False
+        return True
 
     def infer_with_guessing(self):
-        pass
-    
-if __name__ == "__main__":
-    sudoku = Sudoku(read_board("medium1.txt")) # See below for a picture.
-    sudoku.infer_improved()
-    for r in range(9):
-        print(" ".join(str(next(iter(sudoku.get_values((r, c))))) for c in range(9)))
+        if self.isSolved():
+            return True
+
+        self.infer_improved()
+        for cells in Sudoku.CELLS:
+            if len(self.board[cells]) > 1:
+                for number in self.board[cells]:
+                    new_board = copy.deepcopy(self.board)
+                    self.board[cells] = {number}
+                    self.infer_with_guessing()
+                    if self.isSolved():
+                        break
+                    else:
+                        self.board = new_board
+                return True
+
 
 ############################################################
 # Feedback
@@ -130,19 +148,17 @@ if __name__ == "__main__":
 
 # Just an approximation is fine.
 feedback_question_1 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+This homework took me around 8 hours to complete.
 """
 
 feedback_question_2 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+Most challenging with infer_improved becuase my
+original approach was incorrect and it took
+some time to debug.
 """
 
 feedback_question_3 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+I liked the last method because it was fun to implement
+the recursive function and understand logically the cases
+for which backtracking is necessary.
 """
