@@ -90,14 +90,36 @@ class Sudoku(object):
                         queue.append(arc)
             
     def infer_improved(self):
-        pass
+        made_additional_inference = True
+        while made_additional_inference:
+            self.infer_ac3()
+            made_additional_inference = False
+            for cell in Sudoku.CELLS:
+                if len(self.board[cell]) > 1:
+                    for number in self.board[cell]:
+                        unique = True
+                        for arcs in Sudoku.ARCS:
+                            if arcs[1] == cell:
+                                cell2 = arcs[0]
+                                if number in self.board[cell2]:
+                                    unique = False
+                                    break
+                        if unique: 
+                            made_additional_inference = True
+                            self.board[cell] = {number}
+                            break  
+                    if made_additional_inference: 
+                        break
+                        
+                                
+                                
 
     def infer_with_guessing(self):
         pass
     
 if __name__ == "__main__":
-    sudoku = Sudoku(read_board("easy.txt")) # See below for a picture.
-    sudoku.infer_ac3()
+    sudoku = Sudoku(read_board("medium1.txt")) # See below for a picture.
+    sudoku.infer_improved()
     for r in range(9):
         print(" ".join(str(next(iter(sudoku.get_values((r, c))))) for c in range(9)))
 
